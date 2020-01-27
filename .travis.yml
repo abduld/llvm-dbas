@@ -6,17 +6,17 @@ compiler: clang
 addons:
   apt:
     sources:
-    - llvm-toolchain-trusty-4.0
+      - llvm-toolchain-trusty-9.0
     packages:
-    - cmake
-    - cmake-data
-    - llvm-4.0
-    - llvm-4.0-dev
+      - cmake
+      - cmake-data
+      - llvm-9.0
+      - llvm-9.0-dev
 
 script:
-    - rm -rf build
-    - mkdir build
-    - pushd build
-    - cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR="/usr/lib/llvm-4.0/lib/cmake/llvm/" ..
-    - cmake --build .
-    - popd
+  - rm -rf build
+  - mkdir build
+  - pushd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR="/usr/lib/llvm-9.0/lib/cmake/llvm/" ..
+  - cmake --build .
+  - popd
