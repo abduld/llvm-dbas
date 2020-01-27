@@ -11,8 +11,11 @@
 
 #include "LLDebugInfo.h"
 
+#include <iostream>
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_ostream.h>
+
+#define X_DEBUG(...) std::cout << __VA_ARGS__
 
 using namespace llvm;
 
@@ -119,16 +122,16 @@ DIType *LLDebugInfo::addType(Type *Ty, llvm::Module *Mod) {
 
 DISubprogram *LLDebugInfo::addFunction(Function *F, unsigned int Line) {
   DISubroutineType *ST = dyn_cast<DISubroutineType>(addType(F->getFunctionType(), M));
-  DISubprogram *SP =
-      DIB.createFunction(File,
-                         F->getName(),
-                         F->getName(),
-                         File,
-                         Line,
-                         ST,
-                         true,
-                         DINode::FlagZero,
-                         DISubprogram::SPFlagDefinition | DISubprogram::SPFlagOptimized);
+  DISubprogram *SP     = DIB.createFunction(File,
+                                        F->getName(),
+                                        F->getName(),
+                                        File,
+                                        Line,
+                                        ST,
+                                        true,
+                                        DINode::FlagZero,
+                                        DISubprogram::SPFlagLocalToUnit |
+                                            DISubprogram::SPFlagDefinition);
   F->setSubprogram(SP);
   return SP;
 }
@@ -139,11 +142,12 @@ void LLDebugInfo::addParameters(Function *F, DISubprogram *SP, unsigned int Line
     DIType *Ty = addType(arg.getType(), M);
     DILocalVariable *V =
         DIB.createParameterVariable(SP, arg.getName(), i++, File, Line, Ty);
-    DIB.insertDeclare(&arg,
-                      V,
-                      DIB.createExpression(),
-                      DebugLoc::get(Line, 0, SP).get(),
-                      F->getEntryBlock().getFirstNonPHI());
+    X_DEBUG("adding parameters\n");
+    DIB.insertDbgValueIntrinsic(&arg,
+                                V,
+                                DIB.createExpression(),
+                                DebugLoc::get(Line, 0, SP).get(),
+                                F->getEntryBlock().getFirstNonPHI());
   }
 }
 
@@ -152,6 +156,7 @@ void LLDebugInfo::addInstruction(Instruction *I,
                                  std::string NameStr,
                                  int NameID,
                                  unsigned int Line) {
+  X_DEBUG("add instruction\n");
   std::string name = NameStr.empty() ? std::to_string(NameID) : NameStr;
   DebugLoc loc     = DebugLoc::get(Line, 0, SP);
   I->setDebugLoc(loc);
@@ -164,13 +169,14 @@ void LLDebugInfo::addInstruction(Instruction *I,
   if (!I->getType()->isVoidTy()) {
     DIType *Ty         = addType(I->getType(), M);
     DILocalVariable *V = DIB.createAutoVariable(SP, name, File, Line, Ty);
-    auto inst =
-        DIB.insertDeclare(I, V, DIB.createExpression(), loc.get(), I->getParent());
+    auto inst          = DIB.insertDbgValueIntrinsic(
+        I, V, DIB.createExpression(), loc.get(), I->getParent());
     inst->removeFromParent();
     DbgValues.push_back(inst);
   }
 }
 
 void LLDebugInfo::finalize() {
+  X_DEBUG("finalize\n");
   DIB.finalize();
 }

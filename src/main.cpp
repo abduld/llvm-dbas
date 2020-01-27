@@ -28,6 +28,8 @@
 #include "llvm/Support/ToolOutputFile.h"
 #include <memory>
 
+#include <iostream>
+
 using namespace llvm;
 
 static cl::opt<std::string> InputFilename(cl::Positional, cl::desc("<input .ll file>"),
@@ -61,7 +63,8 @@ static void WriteOutputFile(const Module *M) {
     if (InputFilename == "-") {
       OutputFilename = "-";
     } else {
-      StringRef IFN  = InputFilename;
+      StringRef IFN = InputFilename;
+      std::cout << "input file = " << InputFilename << "\n";
       OutputFilename = (IFN.endswith(".ll") ? IFN.drop_back(3) : IFN).str();
       OutputFilename += "_debug.bc";
     }

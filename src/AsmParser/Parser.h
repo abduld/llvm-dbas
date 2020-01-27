@@ -171,17 +171,6 @@ bool parseAssemblyInto(MemoryBufferRef F, Module *M, ModuleSummaryIndex *Index,
                        SMDiagnostic &Err, SlotMapping *Slots = nullptr,
                        bool UpgradeDebugInfo = true, StringRef DataLayoutString = "");
 
-/// Parse a type and a constant value in the given string.
-///
-/// The constant value can be any LLVM constant, including a constant
-/// expression.
-///
-/// \param Slots The optional slot mapping that will restore the parsing state
-/// of the module.
-/// \return null on error.
-Constant *parseConstantValue(StringRef Asm, SMDiagnostic &Err, const Module &M,
-                             const SlotMapping *Slots = nullptr);
-
 /// Parse a type in the given string.
 ///
 /// \param Slots The optional slot mapping that will restore the parsing state
@@ -189,16 +178,6 @@ Constant *parseConstantValue(StringRef Asm, SMDiagnostic &Err, const Module &M,
 /// \return null on error.
 Type *parseType(StringRef Asm, SMDiagnostic &Err, const Module &M,
                 const SlotMapping *Slots = nullptr);
-
-/// Parse a string \p Asm that starts with a type.
-/// \p Read[out] gives the number of characters that have been read to parse
-/// the type in \p Asm.
-///
-/// \param Slots The optional slot mapping that will restore the parsing state
-/// of the module.
-/// \return null on error.
-Type *parseTypeAtBeginning(StringRef Asm, unsigned &Read, SMDiagnostic &Err,
-                           const Module &M, const SlotMapping *Slots = nullptr);
 
 } // namespace llvm
 

@@ -12,28 +12,28 @@
 #ifndef LLVM_DBAS_LLDEBUGINFO_LLDEBUGINFO_H
 #define LLVM_DBAS_LLDEBUGINFO_LLDEBUGINFO_H
 
-#include <llvm/IR/Module.h>
 #include <llvm/IR/DIBuilder.h>
+#include <llvm/IR/Module.h>
 
 namespace llvm {
-  class LLDebugInfo
-  {
-  private:
-    Module *M;
+class LLDebugInfo {
+private:
+  Module *M;
 
-    DIBuilder DIB;
-    DICompileUnit *CU;
-    DIFile *File;
-    std::vector<llvm::Instruction *> DbgValues;
+  DIBuilder DIB;
+  DICompileUnit *CU;
+  DIFile *File;
+  std::vector<llvm::Instruction *> DbgValues;
 
-  public:
-    LLDebugInfo(llvm::Module *M, StringRef File, StringRef Directory);
+public:
+  LLDebugInfo(llvm::Module *M, StringRef File, StringRef Directory);
 
-    DISubprogram *addFunction(Function *F, unsigned int line);
-    DIType *addType(Type *Ty, llvm::Module *M);
-    void addInstruction(Instruction *I, DISubprogram *SP, std::string NameStr, int NameID, unsigned int line);
-    void addParameters(Function *F, DISubprogram *SP, unsigned int line);
-    void finalize();
-  };
-}
-#endif //LLVM_IRDBG_LLDEBUGINFO_H
+  DISubprogram *addFunction(Function *F, unsigned int line);
+  DIType *addType(Type *Ty, llvm::Module *M);
+  void addInstruction(Instruction *I, DISubprogram *SP, std::string NameStr, int NameID,
+                      unsigned int line);
+  void addParameters(Function *F, DISubprogram *SP, unsigned int line);
+  void finalize();
+};
+} // namespace llvm
+#endif // LLVM_IRDBG_LLDEBUGINFO_H
