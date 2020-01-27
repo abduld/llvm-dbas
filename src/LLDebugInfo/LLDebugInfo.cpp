@@ -33,6 +33,28 @@ LLDebugInfo::LLDebugInfo(llvm::Module *M, StringRef Filename, StringRef Director
 }
 
 DIType *LLDebugInfo::addType(Type *Ty, llvm::Module *Mod) {
+
+  std::string type_str;
+  llvm::raw_string_ostream rso(type_str);
+  Ty->print(rso);
+
+  // if (type_str == "") {
+  //   type_str = "__unknown__";
+  // }
+
+  // X_DEBUG(type_str << "\n");
+
+  // if (TypeMap.find(type_str) != TypeMap.end()) {
+  //   return TypeMap.find(type_str)->second;
+  // }
+
+  auto dty          = iAddType(Ty, Mod);
+  TypeMap[type_str] = dty;
+
+  return dty;
+}
+
+DIType *LLDebugInfo::iAddType(Type *Ty, llvm::Module *Mod) {
   DataLayout layout = DataLayout(Mod);
   switch (Ty->getTypeID()) {
     case Type::HalfTyID:
@@ -68,11 +90,19 @@ DIType *LLDebugInfo::addType(Type *Ty, llvm::Module *Mod) {
       FunctionType *FuncTy = dyn_cast<FunctionType>(Ty);
       std::vector<Metadata *> argTypes;
       for (Type *ArgType : FuncTy->params()) {
+#if 1
         argTypes.push_back(addType(ArgType, Mod));
+#else
+        std::string name;
+        raw_string_ostream os(name);
+        ArgType->print(os);
+        argTypes.push_back(DIB.createUnspecifiedType(name));
+#endif
       }
       return DIB.createSubroutineType(DIB.getOrCreateTypeArray(argTypes));
     }
     case Type::StructTyID: {
+#if 1
       StructType *StructTy = dyn_cast<StructType>(Ty);
       if (StructTy->isOpaque()) {
         return DIB.createUnspecifiedType(StructTy->getName());
@@ -102,6 +132,12 @@ DIType *LLDebugInfo::addType(Type *Ty, llvm::Module *Mod) {
                                   DINode::FlagZero,
                                   nullptr,
                                   DIB.getOrCreateArray(argTypes));
+#else
+      std::string name;
+      raw_string_ostream os(name);
+      Ty->print(os);
+      return DIB.createUnspecifiedType(name);
+#endif
     }
     case Type::ArrayTyID: {
       ArrayType *ArrayTy = dyn_cast<ArrayType>(Ty);
@@ -113,9 +149,19 @@ DIType *LLDebugInfo::addType(Type *Ty, llvm::Module *Mod) {
                                  DIB.getOrCreateArray(subscripts));
     }
     case Type::PointerTyID: {
+#if 1
       PointerType *PointerTy = dyn_cast<PointerType>(Ty);
       return DIB.createPointerType(addType(PointerTy->getElementType(), Mod),
                                    layout.getTypeSizeInBits(Ty));
+#else
+      PointerType *PointerTy = dyn_cast<PointerType>(Ty);
+      std::string name;
+      raw_string_ostream os(name);
+      PointerTy->getElementType()->print(os);
+      auto elemT = DIB.createUnspecifiedType(name);
+
+      return DIB.createPointerType(elemT, layout.getTypeSizeInBits(Ty));
+#endif
     }
   }
 }
@@ -130,8 +176,7 @@ DISubprogram *LLDebugInfo::addFunction(Function *F, unsigned int Line) {
                                         ST,
                                         true,
                                         DINode::FlagZero,
-                                        DISubprogram::SPFlagLocalToUnit |
-                                            DISubprogram::SPFlagDefinition);
+                                        DISubprogram::SPFlagZero);
   F->setSubprogram(SP);
   return SP;
 }
@@ -142,7 +187,13 @@ void LLDebugInfo::addParameters(Function *F, DISubprogram *SP, unsigned int Line
     DIType *Ty = addType(arg.getType(), M);
     DILocalVariable *V =
         DIB.createParameterVariable(SP, arg.getName(), i++, File, Line, Ty);
-    X_DEBUG("adding parameters\n");
+    // X_DEBUG("adding parameters\n");
+
+    std::string fm;
+    raw_string_ostream os(fm);
+    Ty->print(os);
+    X_DEBUG(fm << "\n");
+
     DIB.insertDbgValueIntrinsic(&arg,
                                 V,
                                 DIB.createExpression(),
@@ -156,7 +207,7 @@ void LLDebugInfo::addInstruction(Instruction *I,
                                  std::string NameStr,
                                  int NameID,
                                  unsigned int Line) {
-  X_DEBUG("add instruction\n");
+  // X_DEBUG("add instruction\n");
   std::string name = NameStr.empty() ? std::to_string(NameID) : NameStr;
   DebugLoc loc     = DebugLoc::get(Line, 0, SP);
   I->setDebugLoc(loc);

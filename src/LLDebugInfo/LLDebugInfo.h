@@ -24,12 +24,14 @@ private:
   DICompileUnit *CU;
   DIFile *File;
   std::vector<llvm::Instruction *> DbgValues;
+  std::map<std::string, DIType *> TypeMap{};
 
 public:
   LLDebugInfo(llvm::Module *M, StringRef File, StringRef Directory);
 
   DISubprogram *addFunction(Function *F, unsigned int line);
   DIType *addType(Type *Ty, llvm::Module *M);
+  DIType *iAddType(Type *Ty, llvm::Module *M);
   void addInstruction(Instruction *I, DISubprogram *SP, std::string NameStr, int NameID,
                       unsigned int line);
   void addParameters(Function *F, DISubprogram *SP, unsigned int line);
